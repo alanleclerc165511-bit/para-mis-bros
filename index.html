@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ULTRA TEAM F1 🏎️</title>
 
 <style>
@@ -12,41 +13,55 @@ body {
     color: #00ffcc;
     overflow: hidden;
     text-align: center;
-}
-
-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
+    touch-action: manipulation;
 }
 
 /* INTRO */
 .intro {
-    position: absolute;
+    position: fixed;
     width: 100%;
     height: 100%;
     background: black;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 2em;
-    animation: fadeOut 4s forwards 3s;
+    font-size: 1.8em;
+    z-index: 5;
+}
+
+.fade {
+    animation: fadeOut 1.5s forwards;
 }
 
 @keyframes fadeOut {
     to { opacity: 0; visibility: hidden; }
 }
 
+.tip {
+    font-size: 0.6em;
+    margin-top: 20px;
+    opacity: 0.7;
+}
+
+/* CANVAS */
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
 /* HUD */
 .hud {
-    position: absolute;
+    position: fixed;
     top: 10px;
     left: 10px;
+    z-index: 2;
 }
 
 .progress {
-    width: 200px;
-    height: 10px;
+    width: 150px;
+    height: 8px;
     background: #111;
     border-radius: 10px;
     overflow: hidden;
@@ -60,77 +75,77 @@ canvas {
 
 /* TEXTO */
 .story {
-    margin-top: 120px;
-    padding: 20px;
-    font-size: 1.5em;
-    text-shadow: 0 0 10px #00ffcc;
+    position: relative;
+    margin-top: 100px;
+    padding: 15px;
+    font-size: 1.4em;
+    z-index: 2;
+    text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
 }
 
 /* BOTONES */
+#opciones {
+    position: relative;
+    z-index: 2;
+}
+
 button {
-    margin: 10px;
-    padding: 12px 20px;
+    margin: 8px;
+    padding: 14px 18px;
     border: 2px solid #00ffcc;
-    border-radius: 20px;
+    border-radius: 25px;
     background: transparent;
     color: #00ffcc;
     font-weight: bold;
+    font-size: 1em;
     cursor: pointer;
-    transition: 0.3s;
 }
 
-button:hover {
+button:active {
+    transform: scale(0.95);
     background: #00ffcc;
     color: black;
-    transform: scale(1.1);
 }
 
 /* AUTO */
 .car {
-    position: absolute;
-    bottom: 60px;
-    left: -200px;
-    font-size: 60px;
+    position: fixed;
+    bottom: 50px;
+    left: -150px;
+    font-size: 50px;
+    z-index: 1;
 }
 
 .run {
-    animation: correr 2s linear;
+    animation: correr 1.5s linear;
 }
 
 @keyframes correr {
-    0% { left: -200px; }
+    0% { left: -150px; }
     100% { left: 110%; }
 }
 
-/* DINERO */
-.money {
-    position: absolute;
-    font-size: 25px;
-    animation: caer 3s linear infinite;
-}
-
-@keyframes caer {
-    0% { top: -50px; }
-    100% { top: 110%; }
-}
-
-/* LOGROS */
+/* LOGRO */
 .logro {
-    position: absolute;
+    position: fixed;
     bottom: 10px;
     right: 10px;
-    background: rgba(0,0,0,0.7);
-    padding: 10px;
+    background: rgba(0,0,0,0.8);
+    padding: 8px;
     border: 1px solid #00ffcc;
     border-radius: 10px;
     display: none;
+    z-index: 3;
 }
 </style>
 </head>
 
 <body>
 
-<div class="intro">INICIANDO SISTEMA... 🏎️</div>
+<div class="intro" id="intro">
+INICIANDO SISTEMA... 🏎️
+<div class="tip">Toca la pantalla para comenzar</div>
+</div>
 
 <canvas id="bg"></canvas>
 
@@ -141,23 +156,40 @@ button:hover {
 
 <div class="car" id="car">🏎️</div>
 
-<div class="story" id="historia">
-Cargando historia...
-</div>
+<div class="story" id="historia">Toca para iniciar...</div>
 
 <div id="opciones"></div>
 
 <div class="logro" id="logro"></div>
 
 <script>
+// INICIO POR TOQUE (CLAVE PARA CELULAR)
+document.body.addEventListener("click", iniciar, { once: true });
+
+function iniciar(){
+    document.getElementById("intro").classList.add("fade");
+
+    // intentar fullscreen solo después de interacción
+    if(document.documentElement.requestFullscreen){
+        document.documentElement.requestFullscreen().catch(()=>{});
+    }
+
+    setTimeout(()=>escena1(),1500);
+}
+
 // FONDO
 const canvas = document.getElementById("bg");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
 
 let stars = [];
-for(let i=0;i<150;i++){
+for(let i=0;i<120;i++){
     stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2});
 }
 
@@ -166,7 +198,7 @@ function draw(){
     ctx.fillStyle="#00ffcc";
     stars.forEach(s=>{
         ctx.fillRect(s.x,s.y,s.size,s.size);
-        s.y+=2;
+        s.y+=2 + nivel*0.4;
         if(s.y>canvas.height)s.y=0;
     });
     requestAnimationFrame(draw);
@@ -177,10 +209,9 @@ draw();
 let nivel=1;
 let secretos=0;
 
-// MENSAJES DINÁMICOS
 const mensajes = [
-"Su amistad vale más que cualquier dinero 💸",
-"El mundo es mejor con ustedes 🌍",
+"Su amistad vale más que cualquier cantidad de dinero 💸",
+"El mundo es mucho mejor con ustedes 🌍",
 "Son mi lugar seguro ❤️",
 "Nada supera lo que somos juntos 🏎️"
 ];
@@ -195,18 +226,20 @@ function updateHUD(){
     document.getElementById("barra").style.width=(nivel*20)+"%";
 }
 
-// LOGROS
+// VIBRACIÓN (CELULAR PRO)
+function vibrar(){
+    if(navigator.vibrate){
+        navigator.vibrate(50);
+    }
+}
+
+// LOGRO
 function mostrarLogro(txt){
     let l=document.getElementById("logro");
     l.innerText="🏆 "+txt;
     l.style.display="block";
-    setTimeout(()=>l.style.display="none",2000);
+    setTimeout(()=>l.style.display="none",1500);
 }
-
-// INICIO AUTO
-setTimeout(()=>{
-    escena1();
-},4000);
 
 // ESCENAS
 function escena1(){
@@ -214,8 +247,7 @@ function escena1(){
     updateHUD();
     mostrarLogro("Inicio del equipo");
 
-    document.getElementById("historia").innerText =
-    "Zian, Carlos, Gael y Luis... un equipo legendario 🏎️🔥\n\n"+randomMsg();
+    historia("Zian, Carlos, Gael y Luis...\n\nUn equipo legendario 🏎️🔥\n\n"+randomMsg());
 
     opciones([
         ["Carrera 🏁", escena2],
@@ -228,8 +260,7 @@ function escena2(){
     updateHUD();
     correr();
 
-    document.getElementById("historia").innerText =
-    "La pista arde 🔥\n\n"+randomMsg();
+    historia("La pista está ardiendo 🔥\n\n"+randomMsg());
 
     opciones([
         ["Acelerar 🚀", escenaWin],
@@ -240,12 +271,9 @@ function escena2(){
 function escenaMoney(){
     nivel++;
     updateHUD();
-    lluvia();
-
     mostrarLogro("Riqueza desbloqueada");
 
-    document.getElementById("historia").innerText =
-    "El dinero cae 💸\n\n"+randomMsg();
+    historia("El dinero cae... pero ustedes valen más 💸\n\n"+randomMsg());
 
     opciones([
         ["Viajar ✈️", escenaViaje],
@@ -257,8 +285,7 @@ function escenaViaje(){
     nivel++;
     updateHUD();
 
-    document.getElementById("historia").innerText =
-    "Viajes infinitos ✈️🌍\n\n"+randomMsg();
+    historia("Viajes infinitos ✈️🌍\n\n"+randomMsg());
 
     opciones([
         ["Final ❤️", final],
@@ -271,11 +298,9 @@ function escenaWin(){
     updateHUD();
     correr();
     mostrarLogro("Victoria total 🏆");
-
     secretos++;
 
-    document.getElementById("historia").innerText =
-    "Ganaron todo 🔥\n\n"+randomMsg();
+    historia("Ganaron todo 🔥\n\n"+randomMsg());
 
     opciones([
         ["Final ❤️", final],
@@ -288,14 +313,18 @@ function final(){
     nivel++;
     updateHUD();
 
-    let mensajeFinal =
-    "Zian, Carlos, Gael y Luis...\nGracias por existir.\nMe hacen sentir el más afortunado del mundo.\nLos adoro, admiro y amo ❤️🏎️";
+    let mensaje =
+"Zian, Carlos, Gael y Luis...\n\nGracias por existir.\nMe hacen sentir la persona más afortunada del mundo.\nLos adoro, los admiro y los amo ❤️🏎️";
 
-    if(secretos >=2){
-        mensajeFinal += "\n\n🔐 MENSAJE SECRETO:\nNunca quiero perderlos.";
+    if(secretos>=2){
+        mensaje += "\n\n🔐 Nunca quiero perderlos, de verdad.";
     }
 
-    document.getElementById("historia").innerText = mensajeFinal;
+    if(secretos>=3){
+        mensaje += "\n\n💎 Son mi familia elegida.";
+    }
+
+    historia(mensaje);
 
     opciones([
         ["Reiniciar 🔄", escena1]
@@ -303,13 +332,20 @@ function final(){
 }
 
 // FUNCIONES
+function historia(txt){
+    document.getElementById("historia").innerText=txt;
+}
+
 function opciones(lista){
     let c=document.getElementById("opciones");
     c.innerHTML="";
     lista.forEach(op=>{
         let b=document.createElement("button");
         b.innerText=op[0];
-        b.onclick=op[1];
+        b.onclick=()=>{
+            vibrar();
+            op[1]();
+        };
         c.appendChild(b);
     });
 }
@@ -317,18 +353,7 @@ function opciones(lista){
 function correr(){
     let car=document.getElementById("car");
     car.classList.add("run");
-    setTimeout(()=>car.classList.remove("run"),2000);
-}
-
-function lluvia(){
-    for(let i=0;i<25;i++){
-        let m=document.createElement("div");
-        m.classList.add("money");
-        m.innerText="💸";
-        m.style.left=Math.random()*window.innerWidth+"px";
-        document.body.appendChild(m);
-        setTimeout(()=>m.remove(),3000);
-    }
+    setTimeout(()=>car.classList.remove("run"),1500);
 }
 </script>
 
