@@ -2,8 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ULTRA TEAM F1 🏎️</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 
 <style>
 body {
@@ -14,6 +16,12 @@ body {
     overflow: hidden;
     text-align: center;
     touch-action: manipulation;
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
 /* INTRO */
@@ -31,7 +39,7 @@ body {
 }
 
 .fade {
-    animation: fadeOut 1.5s forwards;
+    animation: fadeOut 1.2s forwards;
 }
 
 @keyframes fadeOut {
@@ -42,13 +50,6 @@ body {
     font-size: 0.6em;
     margin-top: 20px;
     opacity: 0.7;
-}
-
-/* CANVAS */
-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
 }
 
 /* HUD */
@@ -78,9 +79,13 @@ canvas {
     position: relative;
     margin-top: 100px;
     padding: 15px;
-    font-size: 1.4em;
+    font-size: 1.3em;
     z-index: 2;
     text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+    white-space: pre-line;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* BOTONES */
@@ -98,7 +103,6 @@ button {
     color: #00ffcc;
     font-weight: bold;
     font-size: 1em;
-    cursor: pointer;
 }
 
 button:active {
@@ -163,51 +167,60 @@ INICIANDO SISTEMA... 🏎️
 <div class="logro" id="logro"></div>
 
 <script>
-// INICIO POR TOQUE (CLAVE PARA CELULAR)
-document.body.addEventListener("click", iniciar, { once: true });
+// -------- INICIO ESTABLE --------
+let iniciado = false;
 
-function iniciar(){
+document.body.addEventListener("pointerdown", () => {
+    if(iniciado) return;
+    iniciado = true;
+
     document.getElementById("intro").classList.add("fade");
 
-    // intentar fullscreen solo después de interacción
-    if(document.documentElement.requestFullscreen){
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(()=>{});
     }
 
-    setTimeout(()=>escena1(),1500);
-}
+    setTimeout(()=>escena1(),1000);
+});
 
-// FONDO
+// -------- CANVAS --------
 const canvas = document.getElementById("bg");
 const ctx = canvas.getContext("2d");
+
+let stars = [];
+let nivel = 1;
 
 function resize(){
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    stars = [];
+    for(let i=0;i<120;i++){
+        stars.push({
+            x:Math.random()*canvas.width,
+            y:Math.random()*canvas.height,
+            size:Math.random()*2
+        });
+    }
 }
 resize();
 window.addEventListener("resize", resize);
-
-let stars = [];
-for(let i=0;i<120;i++){
-    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2});
-}
 
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#00ffcc";
     stars.forEach(s=>{
         ctx.fillRect(s.x,s.y,s.size,s.size);
-        s.y+=2 + nivel*0.4;
-        if(s.y>canvas.height)s.y=0;
+        s.y += 2 + nivel*0.4;
+        if(s.y > canvas.height) s.y = 0;
     });
     requestAnimationFrame(draw);
 }
 draw();
 
-// VARIABLES
-let nivel=1;
-let secretos=0;
+// -------- VARIABLES --------
+let secretos = 0;
+let bloqueado = false;
 
 const mensajes = [
 "Su amistad vale más que cualquier cantidad de dinero 💸",
@@ -220,34 +233,35 @@ function randomMsg(){
     return mensajes[Math.floor(Math.random()*mensajes.length)];
 }
 
-// HUD
+// -------- HUD --------
 function updateHUD(){
-    document.getElementById("nivel").innerText=nivel;
-    document.getElementById("barra").style.width=(nivel*20)+"%";
+    document.getElementById("nivel").innerText = nivel;
+    let progreso = Math.min(nivel*20, 100);
+    document.getElementById("barra").style.width = progreso + "%";
 }
 
-// VIBRACIÓN (CELULAR PRO)
+// -------- VIBRACIÓN --------
 function vibrar(){
     if(navigator.vibrate){
-        navigator.vibrate(50);
+        navigator.vibrate(40);
     }
 }
 
-// LOGRO
+// -------- LOGRO --------
 function mostrarLogro(txt){
-    let l=document.getElementById("logro");
-    l.innerText="🏆 "+txt;
-    l.style.display="block";
+    let l = document.getElementById("logro");
+    l.innerText = "🏆 " + txt;
+    l.style.display = "block";
     setTimeout(()=>l.style.display="none",1500);
 }
 
-// ESCENAS
+// -------- ESCENAS --------
 function escena1(){
-    nivel=1;
+    nivel = 1;
     updateHUD();
     mostrarLogro("Inicio del equipo");
 
-    historia("Zian, Carlos, Gael y Luis...\n\nUn equipo legendario 🏎️🔥\n\n"+randomMsg());
+    historia("Zian, Carlos, Gael y Luis...\n\nUn equipo legendario 🏎️🔥\n\n" + randomMsg());
 
     opciones([
         ["Carrera 🏁", escena2],
@@ -260,7 +274,7 @@ function escena2(){
     updateHUD();
     correr();
 
-    historia("La pista está ardiendo 🔥\n\n"+randomMsg());
+    historia("La pista está ardiendo 🔥\n\n" + randomMsg());
 
     opciones([
         ["Acelerar 🚀", escenaWin],
@@ -273,7 +287,7 @@ function escenaMoney(){
     updateHUD();
     mostrarLogro("Riqueza desbloqueada");
 
-    historia("El dinero cae... pero ustedes valen más 💸\n\n"+randomMsg());
+    historia("El dinero cae... pero ustedes valen más 💸\n\n" + randomMsg());
 
     opciones([
         ["Viajar ✈️", escenaViaje],
@@ -285,7 +299,7 @@ function escenaViaje(){
     nivel++;
     updateHUD();
 
-    historia("Viajes infinitos ✈️🌍\n\n"+randomMsg());
+    historia("Viajes infinitos ✈️🌍\n\n" + randomMsg());
 
     opciones([
         ["Final ❤️", final],
@@ -300,7 +314,7 @@ function escenaWin(){
     mostrarLogro("Victoria total 🏆");
     secretos++;
 
-    historia("Ganaron todo 🔥\n\n"+randomMsg());
+    historia("Ganaron todo 🔥\n\n" + randomMsg());
 
     opciones([
         ["Final ❤️", final],
@@ -308,7 +322,7 @@ function escenaWin(){
     ]);
 }
 
-// FINAL
+// -------- FINAL --------
 function final(){
     nivel++;
     updateHUD();
@@ -316,11 +330,11 @@ function final(){
     let mensaje =
 "Zian, Carlos, Gael y Luis...\n\nGracias por existir.\nMe hacen sentir la persona más afortunada del mundo.\nLos adoro, los admiro y los amo ❤️🏎️";
 
-    if(secretos>=2){
+    if(secretos >= 2){
         mensaje += "\n\n🔐 Nunca quiero perderlos, de verdad.";
     }
 
-    if(secretos>=3){
+    if(secretos >= 3){
         mensaje += "\n\n💎 Son mi familia elegida.";
     }
 
@@ -331,27 +345,35 @@ function final(){
     ]);
 }
 
-// FUNCIONES
+// -------- FUNCIONES --------
 function historia(txt){
-    document.getElementById("historia").innerText=txt;
+    document.getElementById("historia").innerText = txt;
 }
 
 function opciones(lista){
-    let c=document.getElementById("opciones");
-    c.innerHTML="";
+    let c = document.getElementById("opciones");
+    c.innerHTML = "";
+
     lista.forEach(op=>{
-        let b=document.createElement("button");
-        b.innerText=op[0];
-        b.onclick=()=>{
+        let b = document.createElement("button");
+        b.innerText = op[0];
+
+        b.onclick = ()=>{
+            if(bloqueado) return;
+            bloqueado = true;
+
             vibrar();
             op[1]();
+
+            setTimeout(()=>bloqueado=false,300);
         };
+
         c.appendChild(b);
     });
 }
 
 function correr(){
-    let car=document.getElementById("car");
+    let car = document.getElementById("car");
     car.classList.add("run");
     setTimeout(()=>car.classList.remove("run"),1500);
 }
