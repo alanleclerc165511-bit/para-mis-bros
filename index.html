@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ULTRA TEAM F1 🏎️</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: black;
+    color: #00ffcc;
+    overflow: hidden;
+    text-align: center;
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* INTRO */
+.intro {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    animation: fadeOut 4s forwards 3s;
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; visibility: hidden; }
+}
+
+/* HUD */
+.hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+.progress {
+    width: 200px;
+    height: 10px;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    background: #00ffcc;
+}
+
+/* TEXTO */
+.story {
+    margin-top: 120px;
+    padding: 20px;
+    font-size: 1.5em;
+    text-shadow: 0 0 10px #00ffcc;
+}
+
+/* BOTONES */
+button {
+    margin: 10px;
+    padding: 12px 20px;
+    border: 2px solid #00ffcc;
+    border-radius: 20px;
+    background: transparent;
+    color: #00ffcc;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #00ffcc;
+    color: black;
+    transform: scale(1.1);
+}
+
+/* AUTO */
+.car {
+    position: absolute;
+    bottom: 60px;
+    left: -200px;
+    font-size: 60px;
+}
+
+.run {
+    animation: correr 2s linear;
+}
+
+@keyframes correr {
+    0% { left: -200px; }
+    100% { left: 110%; }
+}
+
+/* DINERO */
+.money {
+    position: absolute;
+    font-size: 25px;
+    animation: caer 3s linear infinite;
+}
+
+@keyframes caer {
+    0% { top: -50px; }
+    100% { top: 110%; }
+}
+
+/* LOGROS */
+.logro {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    padding: 10px;
+    border: 1px solid #00ffcc;
+    border-radius: 10px;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="intro">INICIANDO SISTEMA... 🏎️</div>
+
+<canvas id="bg"></canvas>
+
+<div class="hud">
+🏁 Nivel: <span id="nivel">1</span>
+<div class="progress"><div class="bar" id="barra"></div></div>
+</div>
+
+<div class="car" id="car">🏎️</div>
+
+<div class="story" id="historia">
+Cargando historia...
+</div>
+
+<div id="opciones"></div>
+
+<div class="logro" id="logro"></div>
+
+<script>
+// FONDO
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let stars = [];
+for(let i=0;i<150;i++){
+    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2});
+}
+
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#00ffcc";
+    stars.forEach(s=>{
+        ctx.fillRect(s.x,s.y,s.size,s.size);
+        s.y+=2;
+        if(s.y>canvas.height)s.y=0;
+    });
+    requestAnimationFrame(draw);
+}
+draw();
+
+// VARIABLES
+let nivel=1;
+let secretos=0;
+
+// MENSAJES DINÁMICOS
+const mensajes = [
+"Su amistad vale más que cualquier dinero 💸",
+"El mundo es mejor con ustedes 🌍",
+"Son mi lugar seguro ❤️",
+"Nada supera lo que somos juntos 🏎️"
+];
+
+function randomMsg(){
+    return mensajes[Math.floor(Math.random()*mensajes.length)];
+}
+
+// HUD
+function updateHUD(){
+    document.getElementById("nivel").innerText=nivel;
+    document.getElementById("barra").style.width=(nivel*20)+"%";
+}
+
+// LOGROS
+function mostrarLogro(txt){
+    let l=document.getElementById("logro");
+    l.innerText="🏆 "+txt;
+    l.style.display="block";
+    setTimeout(()=>l.style.display="none",2000);
+}
+
+// INICIO AUTO
+setTimeout(()=>{
+    escena1();
+},4000);
+
+// ESCENAS
+function escena1(){
+    nivel=1;
+    updateHUD();
+    mostrarLogro("Inicio del equipo");
+
+    document.getElementById("historia").innerText =
+    "Zian, Carlos, Gael y Luis... un equipo legendario 🏎️🔥\n\n"+randomMsg();
+
+    opciones([
+        ["Carrera 🏁", escena2],
+        ["Dinero 💸", escenaMoney]
+    ]);
+}
+
+function escena2(){
+    nivel++;
+    updateHUD();
+    correr();
+
+    document.getElementById("historia").innerText =
+    "La pista arde 🔥\n\n"+randomMsg();
+
+    opciones([
+        ["Acelerar 🚀", escenaWin],
+        ["Explorar 🌍", escenaViaje]
+    ]);
+}
+
+function escenaMoney(){
+    nivel++;
+    updateHUD();
+    lluvia();
+
+    mostrarLogro("Riqueza desbloqueada");
+
+    document.getElementById("historia").innerText =
+    "El dinero cae 💸\n\n"+randomMsg();
+
+    opciones([
+        ["Viajar ✈️", escenaViaje],
+        ["Carrera 🏎️", escena2]
+    ]);
+}
+
+function escenaViaje(){
+    nivel++;
+    updateHUD();
+
+    document.getElementById("historia").innerText =
+    "Viajes infinitos ✈️🌍\n\n"+randomMsg();
+
+    opciones([
+        ["Final ❤️", final],
+        ["Seguir 🏎️", escena2]
+    ]);
+}
+
+function escenaWin(){
+    nivel++;
+    updateHUD();
+    correr();
+    mostrarLogro("Victoria total 🏆");
+
+    secretos++;
+
+    document.getElementById("historia").innerText =
+    "Ganaron todo 🔥\n\n"+randomMsg();
+
+    opciones([
+        ["Final ❤️", final],
+        ["Dinero 💸", escenaMoney]
+    ]);
+}
+
+// FINAL
+function final(){
+    nivel++;
+    updateHUD();
+
+    let mensajeFinal =
+    "Zian, Carlos, Gael y Luis...\nGracias por existir.\nMe hacen sentir el más afortunado del mundo.\nLos adoro, admiro y amo ❤️🏎️";
+
+    if(secretos >=2){
+        mensajeFinal += "\n\n🔐 MENSAJE SECRETO:\nNunca quiero perderlos.";
+    }
+
+    document.getElementById("historia").innerText = mensajeFinal;
+
+    opciones([
+        ["Reiniciar 🔄", escena1]
+    ]);
+}
+
+// FUNCIONES
+function opciones(lista){
+    let c=document.getElementById("opciones");
+    c.innerHTML="";
+    lista.forEach(op=>{
+        let b=document.createElement("button");
+        b.innerText=op[0];
+        b.onclick=op[1];
+        c.appendChild(b);
+    });
+}
+
+function correr(){
+    let car=document.getElementById("car");
+    car.classList.add("run");
+    setTimeout(()=>car.classList.remove("run"),2000);
+}
+
+function lluvia(){
+    for(let i=0;i<25;i++){
+        let m=document.createElement("div");
+        m.classList.add("money");
+        m.innerText="💸";
+        m.style.left=Math.random()*window.innerWidth+"px";
+        document.body.appendChild(m);
+        setTimeout(()=>m.remove(),3000);
+    }
+}
+</script>
+
+</body>
+</html>
